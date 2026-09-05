@@ -1,0 +1,12 @@
+{
+  "name": "Queues for Spotify",
+  "short_name": "Queues",
+  "description": "Save your place in multiple Spotify playlists and switch between them without losing progress.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#121212",
+  "theme_color": "#1db954",
+  "icons": [
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

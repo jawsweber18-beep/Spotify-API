@@ -18,8 +18,8 @@ function save(data) {
   writeFileSync(DB_PATH, JSON.stringify(data, null, 2));
 }
 
-// Small JSON-file store. Fine for a single-user local app; each spotify
-// account gets its own tokens + list of saved queue slots.
+// Small JSON-file store. Fine for a single-user app on a server with a real
+// persistent disk; each spotify account gets its own tokens + saved queues.
 export function getUser(spotifyId) {
   const data = load();
   return data.users[spotifyId] ?? null;
@@ -65,9 +65,4 @@ export function removeQueue(spotifyId, queueId) {
   user.queues = user.queues.filter((q) => q.id !== queueId);
   save(data);
   return user.queues.length < before;
-}
-
-export function findQueueByName(spotifyId, name) {
-  const user = getUser(spotifyId);
-  return user?.queues.find((q) => q.name.toLowerCase() === name.toLowerCase()) ?? null;
 }

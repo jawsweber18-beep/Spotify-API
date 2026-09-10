@@ -1,0 +1,15 @@
+[Unit]
+Description=Spotify Queues backend
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/spotify-queues/server
+ExecStart=/usr/bin/node src/index.js
+Restart=on-failure
+RestartSec=3
+User=searchfortruth
+Group=searchfortruth
+
+[Install]
+WantedBy=multi-user.target

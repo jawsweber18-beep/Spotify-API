@@ -19,6 +19,11 @@ for (const key of requiredEnvVars) {
 const app = express();
 const PORT = process.env.PORT || 8888;
 const CLIENT_URL = process.env.CLIENT_URL || 'http://127.0.0.1:5173';
+const isProduction = process.env.NODE_ENV === 'production';
+
+// Behind a reverse proxy (Apache/nginx) in production, so req.secure etc.
+// need to trust the proxy's X-Forwarded-* headers.
+if (isProduction) app.set('trust proxy', 1);
 
 app.use(cors({ origin: CLIENT_URL, credentials: true }));
 app.use(express.json());
@@ -30,6 +35,7 @@ app.use(
     cookie: {
       httpOnly: true,
       sameSite: 'lax',
+      secure: isProduction,
       maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
     },
   })
@@ -46,6 +52,8 @@ app.use('/api/queues', queuesRouter);
 
 app.get('/health', (req, res) => res.json({ ok: true }));
 
-app.listen(PORT, () => {
+// Bind to loopback only - in production this sits behind Apache, which is the
+// only thing that should be reachable from outside the machine.
+app.listen(PORT, '127.0.0.1', () => {
   console.log(`Spotify Queues server listening on http://127.0.0.1:${PORT}`);
 });

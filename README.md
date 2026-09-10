@@ -124,6 +124,105 @@ Free ngrok URLs change every time you restart it — update the Spotify
 dashboard redirect URI and `server/.env` each time, or use a paid/static
 domain if you'll do this often.
 
+## 5. Always-on deployment on a home server (Apache)
+
+If you have a Linux server at home already running Apache for another site,
+you can host this alongside it, always-on, for free — no cold starts, no
+tunnel, works from your phone over the public internet. Config templates are
+in `deploy/`.
+
+This assumes a setup like: Ubuntu + Apache serving an existing site over
+HTTPS via a Let's Encrypt cert from certbot, using a free dynamic-DNS domain
+(DuckDNS, dpdns.org, etc.) rather than a real registrar domain. Since that
+kind of cert only covers your exact existing hostname (no wildcard), the
+cleanest path is a **second, independent DDNS hostname** for this app rather
+than a subdomain of your existing one.
+
+### 5.1 Get a domain for this app
+
+Register a new free hostname at [duckdns.org](https://www.duckdns.org) (or
+whatever DDNS provider you already use), e.g. `spotify-queues.duckdns.org`,
+pointed at your home IP. If you already run a DDNS updater script/cron job to
+keep your existing hostname's IP current, add this new hostname to it too so
+it keeps working after your IP changes.
+
+### 5.2 Install Node.js and enable Apache modules
+
+```bash
+curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
+sudo apt-get install -y nodejs
+sudo a2enmod proxy proxy_http
+sudo systemctl reload apache2
+```
+
+### 5.3 Get the app onto the server and build it
+
+```bash
+sudo git clone <your-repo-url> /opt/spotify-queues
+cd /opt/spotify-queues
+sudo chown -R "$USER":"$USER" /opt/spotify-queues
+cd client && npm install && npm run build && cd ..
+cd server && npm install && cd ..
+```
+
+### 5.4 Configure the backend
+
+```bash
+cd server
+cp .env.example .env
+```
+
+Edit `server/.env`:
+
+```
+SPOTIFY_CLIENT_ID=...
+SPOTIFY_CLIENT_SECRET=...
+SPOTIFY_REDIRECT_URI=https://spotify-queues.duckdns.org/auth/callback
+CLIENT_URL=https://spotify-queues.duckdns.org
+SESSION_SECRET=<any long random string>
+NODE_ENV=production
+```
+
+In the [Spotify Developer Dashboard](https://developer.spotify.com/dashboard),
+add `https://spotify-queues.duckdns.org/auth/callback` as another Redirect
+URI on your app (you can keep the localhost one too — Spotify allows
+multiple).
+
+### 5.5 Run the backend as a systemd service
+
+```bash
+sudo cp /opt/spotify-queues/deploy/spotify-queues.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable --now spotify-queues
+sudo systemctl status spotify-queues   # should say "active (running)"
+```
+
+If the service file's `WorkingDirectory`, `User`, or `Group` don't match
+where you cloned the repo or your Linux username, edit
+`/etc/systemd/system/spotify-queues.service` before enabling it.
+
+### 5.6 Add the Apache vhost and get a certificate
+
+```bash
+sudo cp /opt/spotify-queues/deploy/apache-vhost.conf /etc/apache2/sites-available/spotify-queues.conf
+sudo nano /etc/apache2/sites-available/spotify-queues.conf   # replace the placeholder hostname
+sudo a2ensite spotify-queues.conf
+sudo systemctl reload apache2
+sudo certbot --apache -d spotify-queues.duckdns.org
+```
+
+Certbot will rewrite the vhost file to add the `:443` block and an
+HTTP→HTTPS redirect, the same way it already did for your existing site.
+
+### 5.7 Test it
+
+Visit `https://spotify-queues.duckdns.org` from your phone (on or off your
+home Wi-Fi) and log in. "Add to Home Screen" from your browser's share sheet
+for an app-like icon.
+
+To ship a future code change: `git pull`, re-run the client build if the
+frontend changed, then `sudo systemctl restart spotify-queues`.
+
 ## Notes
 
 - `server/data.json` is your local database of saved tokens and queues —

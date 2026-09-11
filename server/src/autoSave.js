@@ -3,14 +3,11 @@ import { getPlaybackState } from './spotifyApi.js';
 
 const POLL_MS = 15_000;
 
-// Last track URI we saw per user, purely in memory - losing it on a restart
-// just skips one auto-save cycle, which is harmless.
-const lastSeenTrackUri = new Map();
-
-// If the track just changed while playback is still inside the active saved
-// queue's context, refresh that queue's bookmark to the new track/position.
-// This runs independently of the web app being open, so switching tracks
-// (or just walking away) never loses your place in a saved queue.
+// While a song is actively playing inside the active saved queue's own
+// context, keep that queue's bookmark refreshed every poll - so switching
+// tracks, walking away, or the app being closed never loses more than one
+// poll interval's worth of progress. Paused playback is left alone since
+// there's nothing new to capture.
 async function checkUser(spotifyId) {
   const user = getUser(spotifyId);
   if (!user?.activeQueueId) return;
@@ -19,11 +16,7 @@ async function checkUser(spotifyId) {
   if (!activeQueue) return;
 
   const state = await getPlaybackState(spotifyId);
-  if (!state?.item || !state.context?.uri) return;
-
-  const previousTrackUri = lastSeenTrackUri.get(spotifyId);
-  lastSeenTrackUri.set(spotifyId, state.item.uri);
-  if (!previousTrackUri || previousTrackUri === state.item.uri) return;
+  if (!state?.item || !state.context?.uri || !state.is_playing) return;
   if (activeQueue.contextUri !== state.context.uri) return;
 
   updateQueue(spotifyId, activeQueue.id, {

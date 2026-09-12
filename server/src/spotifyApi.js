@@ -57,6 +57,22 @@ export async function getPlaybackState(spotifyId) {
   return res.json();
 }
 
+/** Currently playing track plus whatever's queued up next. */
+export async function getQueue(spotifyId) {
+  const res = await spotifyFetch(spotifyId, '/me/player/queue');
+  if (res.status === 204) return null;
+  if (!res.ok) throw new Error(`getQueue failed: ${res.status}`);
+  return res.json();
+}
+
+/** Spotify Connect devices the account can see right now (open app, even if idle). */
+export async function getAvailableDevices(spotifyId) {
+  const res = await spotifyFetch(spotifyId, '/me/player/devices');
+  if (!res.ok) throw new Error(`getAvailableDevices failed: ${res.status}`);
+  const data = await res.json();
+  return data.devices ?? [];
+}
+
 export async function pausePlayback(spotifyId) {
   const res = await spotifyFetch(spotifyId, '/me/player/pause', { method: 'PUT' });
   // Spotify returns 403 if playback is already paused or no active device - not fatal for our use case.
@@ -65,17 +81,23 @@ export async function pausePlayback(spotifyId) {
 
 /**
  * Resume playback. With no args, resumes whatever was last active on the current device.
- * With contextUri, starts that playlist/album from the given track/position.
+ * With uris, plays that exact ordered list of tracks from the start (used to replay a
+ * saved queue's current + upcoming tracks). With contextUri, starts that playlist/album
+ * from the given track/position instead (legacy single-track saved queues). Pass deviceId
+ * to target a specific Spotify Connect device - required when nothing is active anywhere.
  */
-export async function startPlayback(spotifyId, { contextUri, trackUri, positionMs } = {}) {
+export async function startPlayback(spotifyId, { contextUri, trackUri, uris, positionMs, deviceId } = {}) {
   const body = {};
-  if (contextUri) {
+  if (uris?.length) {
+    body.uris = uris;
+  } else if (contextUri) {
     body.context_uri = contextUri;
     if (trackUri) body.offset = { uri: trackUri };
   }
   if (typeof positionMs === 'number') body.position_ms = positionMs;
 
-  const res = await spotifyFetch(spotifyId, '/me/player/play', {
+  const query = deviceId ? `?device_id=${encodeURIComponent(deviceId)}` : '';
+  const res = await spotifyFetch(spotifyId, `/me/player/play${query}`, {
     method: 'PUT',
     body: Object.keys(body).length ? JSON.stringify(body) : undefined,
   });

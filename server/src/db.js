@@ -25,6 +25,11 @@ export function getUser(spotifyId) {
   return data.users[spotifyId] ?? null;
 }
 
+export function listUserIds() {
+  const data = load();
+  return Object.keys(data.users);
+}
+
 export function upsertUser(spotifyId, fields) {
   const data = load();
   data.users[spotifyId] = { ...(data.users[spotifyId] ?? { queues: [] }), ...fields };

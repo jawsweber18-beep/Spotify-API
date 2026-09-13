@@ -8,6 +8,7 @@ import { queuesRouter } from './routes/queues.js';
 import { requireAuth } from './middleware.js';
 import { getUser } from './db.js';
 import { startKeepPlayingWatchdog } from './watchdog.js';
+import { startAutoSavePoller } from './autoSave.js';
 
 const requiredEnvVars = ['SPOTIFY_CLIENT_ID', 'SPOTIFY_CLIENT_SECRET', 'SPOTIFY_REDIRECT_URI', 'SESSION_SECRET'];
 for (const key of requiredEnvVars) {
@@ -60,3 +61,4 @@ app.listen(PORT, '127.0.0.1', () => {
 });
 
 startKeepPlayingWatchdog();
+startAutoSavePoller();

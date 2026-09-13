@@ -32,6 +32,15 @@ export function upsertUser(spotifyId, fields) {
   return data.users[spotifyId];
 }
 
+// Everyone who currently has the keep-playing watchdog turned on, for the
+// watchdog's poll loop to check on.
+export function listUsersWithKeepPlaying() {
+  const data = load();
+  return Object.entries(data.users)
+    .filter(([, user]) => user.keepPlayingEnabled)
+    .map(([spotifyId, user]) => ({ spotifyId, ...user }));
+}
+
 export function listQueues(spotifyId) {
   const user = getUser(spotifyId);
   return user?.queues ?? [];

@@ -3,6 +3,7 @@ import { api } from './api.js';
 import Login from './components/Login.jsx';
 import NowPlaying from './components/NowPlaying.jsx';
 import QueueList from './components/QueueList.jsx';
+import KeepPlayingToggle from './components/KeepPlayingToggle.jsx';
 
 const POLL_MS = 5000;
 
@@ -76,6 +77,12 @@ export default function App() {
         onPause={() => runAction(api.pause)}
         onResume={() => runAction(api.resume)}
         onSaveNew={(name) => runAction(() => api.createQueue(name))}
+      />
+
+      <KeepPlayingToggle
+        enabled={!!playerState?.keepPlayingEnabled}
+        busy={busy}
+        onChange={(enabled) => runAction(() => api.setKeepPlaying(enabled))}
       />
 
       <QueueList

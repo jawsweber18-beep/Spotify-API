@@ -117,7 +117,12 @@ queuesRouter.post('/:id/activate', async (req, res) => {
       trackUri: target.trackUri,
       positionMs: target.positionMs,
     });
-    upsertUser(spotifyId, { activeQueueId: targetId });
+    upsertUser(spotifyId, {
+      activeQueueId: targetId,
+      // Switching queues is a play command - if keep-playing is on, it should
+      // now enforce this new queue rather than whatever was active before.
+      ...(getUser(spotifyId)?.keepPlayingEnabled ? { desiredState: 'playing' } : {}),
+    });
 
     res.json({ ok: true, activeQueueId: targetId });
   } catch (err) {

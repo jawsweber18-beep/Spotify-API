@@ -223,6 +223,27 @@ for an app-like icon.
 To ship a future code change: `git pull`, re-run the client build if the
 frontend changed, then `sudo systemctl restart spotify-queues`.
 
+## "Keep playing" (auto-resume watchdog)
+
+Some setups hit a known Spotify annoyance where playback stops instead of
+advancing to the next track. There's a toggle in the app for this: when on,
+the backend checks every 20 seconds whether Spotify should be playing but
+isn't, and resumes it (or skips to the next track, if it stalled right at
+the end of one).
+
+**Important trade-off:** the Spotify API doesn't say *why* playback stopped,
+so this can't tell "the bug" apart from you pausing some other way. Turning
+it on means pausing from the Spotify app itself, a Bluetooth headset button,
+a smart speaker, etc. will also get overridden. Pausing from *this app's*
+Pause button is the one thing it treats as intentional — that's tracked as
+each user's `desiredState` in `server/data.json`, flipped to `'playing'` by
+Resume/Save-and-switch-queue and to `'paused'` by Pause.
+
+Because this runs as a server-side loop (`server/src/watchdog.js`), it keeps
+working even with your phone locked or the browser tab closed — it only
+depends on the backend being up, which on the home-server deployment above
+it always is.
+
 ## Notes
 
 - `server/data.json` is your local database of saved tokens and queues —

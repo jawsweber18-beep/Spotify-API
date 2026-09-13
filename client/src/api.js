@@ -35,6 +35,7 @@ export const api = {
   playerState: () => request('/api/player/state'),
   pause: () => request('/api/player/pause', { method: 'PUT' }),
   resume: () => request('/api/player/resume', { method: 'PUT' }),
+  setKeepPlaying: (enabled) => request('/api/player/keep-playing', { method: 'PUT', body: JSON.stringify({ enabled }) }),
 
   listQueues: () => request('/api/queues'),
   createQueue: (name) => request('/api/queues', { method: 'POST', body: JSON.stringify({ name }) }),

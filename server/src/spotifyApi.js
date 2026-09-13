@@ -63,6 +63,14 @@ export async function pausePlayback(spotifyId) {
   if (!res.ok && res.status !== 403) throw new Error(`pausePlayback failed: ${res.status}`);
 }
 
+// Used by the keep-playing watchdog when it catches Spotify stalled right at
+// the end of a track instead of advancing - skipping is more correct there
+// than resuming, which would just replay the last second of the same track.
+export async function skipToNext(spotifyId) {
+  const res = await spotifyFetch(spotifyId, '/me/player/next', { method: 'POST' });
+  if (!res.ok && res.status !== 403) throw new Error(`skipToNext failed: ${res.status}`);
+}
+
 /**
  * Resume playback. With no args, resumes whatever was last active on the current device.
  * With contextUri, starts that playlist/album from the given track/position.

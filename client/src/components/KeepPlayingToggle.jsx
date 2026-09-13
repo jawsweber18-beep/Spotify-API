@@ -4,9 +4,9 @@ export default function KeepPlayingToggle({ enabled, onChange, busy }) {
       <div className="keep-playing-text">
         <div className="keep-playing-title">Keep playing</div>
         <div className="keep-playing-hint">
-          If Spotify stops on its own, resume it automatically. This also overrides
-          pausing from anywhere other than the Pause button above — the Spotify app,
-          a Bluetooth button, a smart speaker.
+          Fixes the Spotify bug where it stops instead of moving to the next song: if
+          it's found paused within the last 10 seconds of a track, skips ahead
+          automatically. Pauses earlier in a track are left alone.
         </div>
       </div>
       <label className="switch">

@@ -1,8 +1,12 @@
 import { listUsersWithKeepPlaying } from './db.js';
-import { getPlaybackState, startPlayback, skipToNext } from './spotifyApi.js';
+import { getPlaybackState, skipToNext } from './spotifyApi.js';
 
-const POLL_MS = 20_000;
-const NEAR_END_MS = 3000; // close enough to the end of a track to skip instead of resume
+const POLL_MS = 15_000;
+// Only intervene if caught paused this close to a track's end - the signature
+// of Spotify's stuck-at-end-of-song bug. A pause further back in the track is
+// left alone, since that's much more likely to be a deliberate pause from
+// somewhere else (the Spotify app, a Bluetooth button, etc.).
+const NEAR_END_MS = 10_000;
 
 async function checkUser(user) {
   const state = await getPlaybackState(user.spotifyId);
@@ -11,19 +15,11 @@ async function checkUser(user) {
   // in either case there's nothing to enforce right now.
   if (!state?.item || user.desiredState !== 'playing' || state.is_playing) return;
 
-  const nearEndOfTrack = state.item.duration_ms - state.progress_ms < NEAR_END_MS;
+  const remainingMs = state.item.duration_ms - state.progress_ms;
+  if (remainingMs > NEAR_END_MS) return; // paused mid-track - leave it alone
 
-  if (nearEndOfTrack) {
-    console.log(`[keep-playing] ${user.spotifyId}: stalled at end of track, skipping to next`);
-    await skipToNext(user.spotifyId);
-  } else {
-    console.log(`[keep-playing] ${user.spotifyId}: found paused unexpectedly, resuming`);
-    await startPlayback(user.spotifyId, {
-      contextUri: state.context?.uri,
-      trackUri: state.item.uri,
-      positionMs: state.progress_ms,
-    });
-  }
+  console.log(`[keep-playing] ${user.spotifyId}: caught paused ${Math.round(remainingMs / 1000)}s from the end, skipping to next`);
+  await skipToNext(user.spotifyId);
 }
 
 export function startKeepPlayingWatchdog() {

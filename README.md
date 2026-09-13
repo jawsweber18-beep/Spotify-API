@@ -227,17 +227,19 @@ frontend changed, then `sudo systemctl restart spotify-queues`.
 
 Some setups hit a known Spotify annoyance where playback stops instead of
 advancing to the next track. There's a toggle in the app for this: when on,
-the backend checks every 20 seconds whether Spotify should be playing but
-isn't, and resumes it (or skips to the next track, if it stalled right at
-the end of one).
+the backend checks every 15 seconds for a track that's paused within the
+last 10 seconds of its runtime — the signature of that bug — and skips to
+the next track.
 
-**Important trade-off:** the Spotify API doesn't say *why* playback stopped,
-so this can't tell "the bug" apart from you pausing some other way. Turning
-it on means pausing from the Spotify app itself, a Bluetooth headset button,
-a smart speaker, etc. will also get overridden. Pausing from *this app's*
-Pause button is the one thing it treats as intentional — that's tracked as
-each user's `desiredState` in `server/data.json`, flipped to `'playing'` by
-Resume/Save-and-switch-queue and to `'paused'` by Pause.
+The Spotify API doesn't say *why* playback stopped, so this still can't tell
+"the bug" apart from you pausing some other way. Restricting it to the last
+10 seconds of a track keeps false positives rare: an intentional pause is
+overwhelmingly more likely to land somewhere in the middle of a song than in
+its closing seconds. If you do want it to leave a track alone right at the
+end, use *this app's* Pause button — that's the one thing it always treats
+as intentional, tracked as each user's `desiredState` in `server/data.json`,
+flipped to `'playing'` by Resume/Save-and-switch-queue and to `'paused'` by
+Pause.
 
 Because this runs as a server-side loop (`server/src/watchdog.js`), it keeps
 working even with your phone locked or the browser tab closed — it only

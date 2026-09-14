@@ -67,7 +67,12 @@ queuesRouter.post('/', async (req, res) => {
       });
     }
 
-    const queue = { id: crypto.randomUUID(), name: name.trim(), ...snapshot };
+    // createdAt/lastActivatedAt are separate from snapshot's savedAt, which the
+    // auto-save poller bumps every ~15s while this queue is playing - using that
+    // for "recently used" sorting would reorder the list constantly during normal
+    // listening. lastActivatedAt only moves when a queue is actually switched to.
+    const now = Date.now();
+    const queue = { id: crypto.randomUUID(), name: name.trim(), createdAt: now, lastActivatedAt: now, ...snapshot };
     addQueue(req.session.spotifyId, queue);
     upsertUser(req.session.spotifyId, { activeQueueId: queue.id });
     res.status(201).json(queue);
@@ -136,6 +141,7 @@ queuesRouter.post('/:id/activate', async (req, res) => {
       positionMs: target.positionMs,
       deviceId,
     });
+    updateQueue(spotifyId, targetId, { lastActivatedAt: Date.now() });
     upsertUser(spotifyId, {
       activeQueueId: targetId,
       // Switching queues is a play command - if keep-playing is on, it should

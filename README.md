@@ -19,7 +19,8 @@ between "streams" is instant and lossless, one at a time.
   Spotify account in `server/data.json`.
 - `client/` — React (Vite) frontend. Mobile-first UI: current track, a button
   to save it as a new queue, and a list of saved queues you can tap to switch
-  between.
+  between — sortable by Recent (last switched to), Name, or Added (creation
+  order); your choice is remembered in the browser.
 
 The dev server proxies `/api` and `/auth` from the frontend straight to the
 backend, so the browser only ever talks to one origin. This matters for

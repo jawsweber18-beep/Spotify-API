@@ -198,27 +198,41 @@ header h1 {
 }
 
 .keep-playing {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
   background: var(--surface);
   border-radius: 12px;
-  padding: 0.85rem 1rem;
+  padding: 0.7rem 1rem;
   margin-bottom: 1.5rem;
 }
 
-.keep-playing-text { flex: 1; }
+.keep-playing-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
 
 .keep-playing-title {
   font-weight: 600;
   font-size: 0.95rem;
 }
 
+.keep-playing-details summary {
+  color: var(--text-dim);
+  font-size: 0.78rem;
+  cursor: pointer;
+  margin-top: 0.35rem;
+  width: fit-content;
+}
+
+.keep-playing-details[open] summary {
+  margin-bottom: 0.35rem;
+}
+
 .keep-playing-hint {
   color: var(--text-dim);
   font-size: 0.78rem;
-  margin-top: 0.2rem;
   line-height: 1.4;
+  margin: 0;
 }
 
 .switch {

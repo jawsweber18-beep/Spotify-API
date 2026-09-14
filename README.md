@@ -227,9 +227,15 @@ frontend changed, then `sudo systemctl restart spotify-queues`.
 
 Some setups hit a known Spotify annoyance where playback stops instead of
 advancing to the next track. There's a toggle in the app for this: when on,
-the backend checks every 15 seconds for a track that's paused within the
-last 10 seconds of its runtime — the signature of that bug — and skips to
-the next track.
+the backend watches for a track that's paused within the last 10 seconds of
+its runtime — the signature of that bug — and skips to the next track.
+
+Polling is adaptive rather than a fixed interval: a check every 20s is
+plenty for most of a track, but once it's within that last-10-seconds
+window the backend switches to checking every 2s, so a stall is caught in a
+couple of seconds instead of waiting out a long fixed interval. Because the
+fast rate only ever runs during that short window per track, this doesn't
+meaningfully add to Spotify API usage.
 
 The Spotify API doesn't say *why* playback stopped, so this still can't tell
 "the bug" apart from you pausing some other way. Restricting it to the last

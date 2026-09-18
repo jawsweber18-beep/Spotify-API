@@ -71,6 +71,16 @@ export function updateQueue(spotifyId, queueId, fields) {
   return queue;
 }
 
+// Whether `state`'s currently playing track is still part of this queue's saved
+// sequence (current + upcoming tracks, or - for queues saved before that existed -
+// the same Spotify context/playlist). Used to detect when playback has drifted to
+// something else entirely, so a stale queue doesn't keep showing/acting as active.
+export function queueMatchesTrack(queue, state) {
+  if (!queue || !state?.item) return false;
+  if (queue.trackUris?.length) return queue.trackUris.includes(state.item.uri);
+  return !!state.context?.uri && queue.contextUri === state.context.uri;
+}
+
 export function removeQueue(spotifyId, queueId) {
   const data = load();
   const user = data.users[spotifyId];

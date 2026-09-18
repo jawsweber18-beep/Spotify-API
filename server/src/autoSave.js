@@ -1,4 +1,4 @@
-import { getUser, listUserIds, listQueues, updateQueue } from './db.js';
+import { getUser, listUserIds, listQueues, updateQueue, queueMatchesTrack } from './db.js';
 import { getPlaybackState } from './spotifyApi.js';
 
 const POLL_MS = 15_000;
@@ -19,6 +19,7 @@ async function checkUser(spotifyId) {
 
   const state = await getPlaybackState(spotifyId);
   if (!state?.item || !state.is_playing) return;
+  if (!queueMatchesTrack(activeQueue, state)) return; // playback has moved outside this queue's saved sequence
 
   const fields = {
     trackName: state.item.name,
@@ -30,13 +31,10 @@ async function checkUser(spotifyId) {
 
   if (activeQueue.trackUris?.length) {
     const idx = activeQueue.trackUris.indexOf(state.item.uri);
-    if (idx === -1) return; // playback has moved outside this queue's saved sequence
     updateQueue(spotifyId, activeQueue.id, { ...fields, trackUris: activeQueue.trackUris.slice(idx) });
-    return;
+  } else {
+    updateQueue(spotifyId, activeQueue.id, { ...fields, trackUri: state.item.uri });
   }
-
-  if (!state.context?.uri || activeQueue.contextUri !== state.context.uri) return;
-  updateQueue(spotifyId, activeQueue.id, { ...fields, trackUri: state.item.uri });
 }
 
 export function startAutoSavePoller() {

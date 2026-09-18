@@ -88,9 +88,11 @@ export default function App() {
       <QueueList
         queues={queues}
         activeQueueId={playerState?.activeQueueId}
+        isPlaying={!!playerState?.isPlaying}
         busy={busy}
         onActivate={(id) => runAction(() => api.activateQueue(id))}
-        onSaveHere={(id) => runAction(() => api.saveQueue(id))}
+        onPause={() => runAction(api.pause)}
+        onResume={() => runAction(api.resume)}
         onRename={(id, name) => runAction(() => api.renameQueue(id, name))}
         onDelete={(id) => runAction(() => api.deleteQueue(id))}
       />

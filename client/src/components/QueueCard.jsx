@@ -7,7 +7,7 @@ function formatMs(ms) {
   return `${min}:${sec.toString().padStart(2, '0')}`;
 }
 
-export default function QueueCard({ queue, isActive, onActivate, onSaveHere, onRename, onDelete, busy }) {
+export default function QueueCard({ queue, isActive, isPlaying, onActivate, onPause, onResume, onRename, onDelete, busy }) {
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(queue.name);
 
@@ -47,8 +47,8 @@ export default function QueueCard({ queue, isActive, onActivate, onSaveHere, onR
           </button>
         )}
         {isActive && (
-          <button className="btn" onClick={onSaveHere} disabled={busy}>
-            Save position
+          <button className="btn" onClick={isPlaying ? onPause : onResume} disabled={busy}>
+            {isPlaying ? 'Pause' : 'Resume'}
           </button>
         )}
         <button className="btn btn-danger" onClick={onDelete} disabled={busy}>

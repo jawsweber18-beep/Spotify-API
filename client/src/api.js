@@ -39,7 +39,6 @@ export const api = {
 
   listQueues: () => request('/api/queues'),
   createQueue: (name) => request('/api/queues', { method: 'POST', body: JSON.stringify({ name }) }),
-  saveQueue: (id) => request(`/api/queues/${id}/save`, { method: 'PUT' }),
   renameQueue: (id, name) => request(`/api/queues/${id}`, { method: 'PATCH', body: JSON.stringify({ name }) }),
   deleteQueue: (id) => request(`/api/queues/${id}`, { method: 'DELETE' }),
   activateQueue: (id) => request(`/api/queues/${id}/activate`, { method: 'POST' }),

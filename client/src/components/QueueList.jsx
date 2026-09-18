@@ -18,7 +18,7 @@ function loadStoredSort() {
   }
 }
 
-export default function QueueList({ queues, activeQueueId, onActivate, onSaveHere, onRename, onDelete, busy }) {
+export default function QueueList({ queues, activeQueueId, isPlaying, onActivate, onPause, onResume, onRename, onDelete, busy }) {
   const [sortKey, setSortKey] = useState(loadStoredSort);
 
   useEffect(() => {
@@ -61,9 +61,11 @@ export default function QueueList({ queues, activeQueueId, onActivate, onSaveHer
             key={q.id}
             queue={q}
             isActive={q.id === activeQueueId}
+            isPlaying={isPlaying}
             busy={busy}
             onActivate={() => onActivate(q.id)}
-            onSaveHere={() => onSaveHere(q.id)}
+            onPause={onPause}
+            onResume={onResume}
             onRename={(name) => onRename(q.id, name)}
             onDelete={() => onDelete(q.id)}
           />
